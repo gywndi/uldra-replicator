@@ -1,4 +1,4 @@
-# uldra-binlog-trasfer
+# uldra-replicator
 
 1. MySQL replicator that supports various target form.
 2. Parallel processing on a specific column basis
