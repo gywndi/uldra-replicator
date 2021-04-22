@@ -1,0 +1,31 @@
+workerCount: 16
+wokerQueueSize: 5000
+
+binlogServer: 127.0.0.1:3306
+binlogServerID: 5
+binlogServerUsername: repl
+binlogServerPassword: repl
+binlogInfoFile: "binlog.info"
+
+binlogPolicies:
+- name: origin.s_user
+  groupKey: userid
+  replicatPolicies:
+  - name: "t_user"
+- name: origin.s_user_status
+  groupKey: userid
+    
+dataSources:
+- !!org.apache.commons.dbcp2.BasicDataSource
+  url: jdbc:mysql://127.0.0.1:3306/target?autoReconnect=true&useSSL=false&sessionVariables=SQL_MODE='NO_AUTO_VALUE_ON_ZERO'
+  username: target
+  password: target
+  maxTotal: 30
+  maxWaitMillis: 100
+  validationQuery: SELECT 1
+  testOnBorrow: false
+  testOnReturn: false
+  testWhileIdle: true
+  timeBetweenEvictionRunsMillis: 60000
+  minEvictableIdleTimeMillis : 1200000
+  numTestsPerEvictionRun : 10
