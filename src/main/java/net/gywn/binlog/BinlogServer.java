@@ -68,8 +68,6 @@ public class BinlogServer {
 	@Getter
 	private Exception threadException;
 
-	private boolean recovering = true;
-
 	public BinlogServer(final UldraConfig uldraConfig) {
 		this.uldraConfig = uldraConfig;
 		this.binlogServer = uldraConfig.getBinlogServer();
@@ -156,9 +154,9 @@ public class BinlogServer {
 								lastBinlog = binlogHandler.getTargetBinlog();
 							}
 
-							if (recovering && !binlogHandler.isRecoveringPosition()) {
+							if (binlogHandler.isRecovering() && !binlogHandler.isRecoveringPosition()) {
 								logger.info("Recover finished, target - {}", binlogHandler.getTargetBinlog());
-								recovering = false;
+								binlogHandler.setRecovering(false);
 							}
 
 							// flush binlog position info

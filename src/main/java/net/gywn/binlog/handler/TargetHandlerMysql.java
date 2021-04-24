@@ -59,8 +59,8 @@ public class TargetHandlerMysql implements TargetHandler {
 			params.add(e.getValue());
 		}
 
-		String sql = String.format("insert into %s (%s) values (%s)", operation.getTableName(), sbCol.toString(),
-				sbVal.toString());
+		String sql = String.format("insert%s into %s (%s) values (%s)", getIgnore(operation), operation.getTableName(),
+				sbCol.toString(), sbVal.toString());
 
 		executeUpdate(connection, sql, params);
 	}
@@ -91,7 +91,7 @@ public class TargetHandlerMysql implements TargetHandler {
 			params.add(e.getValue());
 		}
 
-		String sql = String.format("insert ignore into %s (%s) values (%s) on duplicate key update %s",
+		String sql = String.format("insert%s into %s (%s) values (%s) on duplicate key update %s", getIgnore(operation),
 				operation.getTableName(), sbCol.toString(), sbVal.toString(), sbDup.toString());
 		executeUpdate(connection, sql, params);
 	}
@@ -120,8 +120,8 @@ public class TargetHandlerMysql implements TargetHandler {
 			params.add(e.getValue());
 		}
 
-		String sql = String.format("update ignore %s set %s where 1=1 %s", operation.getTableName(), sbSet.toString(),
-				sbWhe.toString());
+		String sql = String.format("update%s %s set %s where 1=1 %s", getIgnore(operation), operation.getTableName(),
+				sbSet.toString(), sbWhe.toString());
 		executeUpdate(connection, sql, params);
 
 	}
@@ -140,7 +140,8 @@ public class TargetHandlerMysql implements TargetHandler {
 			params.add(e.getValue());
 		}
 
-		String sql = String.format("delete ignore from %s where 1=1 %s", operation.getTableName(), sbWhe.toString());
+		String sql = String.format("delete%s from %s where 1=1 %s", getIgnore(operation), operation.getTableName(),
+				sbWhe.toString());
 		executeUpdate(connection, sql, params);
 	}
 
@@ -167,8 +168,8 @@ public class TargetHandlerMysql implements TargetHandler {
 			params.add(e.getValue());
 		}
 
-		String sql = String.format("update ignore %s set %s where 1=1 %s", operation.getTableName(), sbSet.toString(),
-				sbWhe.toString());
+		String sql = String.format("update%s %s set %s where 1=1 %s", getIgnore(operation), operation.getTableName(),
+				sbSet.toString(), sbWhe.toString());
 		executeUpdate(connection, sql, params);
 	}
 
@@ -248,7 +249,10 @@ public class TargetHandlerMysql implements TargetHandler {
 		}
 		pstmt.executeUpdate();
 		pstmt.close();
+	}
 
+	private String getIgnore(final TargetOperation operation) {
+		return operation.isRecovering() ? " ignore" : "";
 	}
 
 }

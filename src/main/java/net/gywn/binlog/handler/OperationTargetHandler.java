@@ -37,11 +37,12 @@ public enum OperationTargetHandler {
 				return;
 			}
 
-			if (binlogTransaction.isRecovering()) {
+			if (targetOperation.isRecovering()) {
 				logger.debug("TargetOpType->INSERT->UPSERT");
 				targetHandler.upsert(binlogTransaction.getConnection(), targetOperation);
 				return;
 			}
+
 			logger.debug("TargetOpType->INSERT");
 			targetHandler.insert(binlogTransaction.getConnection(), targetOperation);
 		}
@@ -65,7 +66,7 @@ public enum OperationTargetHandler {
 
 			if (targetOperation.isGroupKeyChanged()) {
 				logger.debug("TargetOpType->UPDATE->KEY_CHANGED");
-				
+
 				// Fill by old image
 				Map<String, String> map = targetHandler.selectByOld(binlogTransaction.getConnection(), targetOperation);
 
@@ -81,7 +82,7 @@ public enum OperationTargetHandler {
 						targetOperation.getDatMap().put(entry.getKey(), entry.getValue());
 					}
 				}
-				
+
 				logger.debug("TargetOpType->INSERT->NO_ROWKEY->MERGED {}", targetOperation);
 				targetHandler.upsert(binlogTransaction.getConnection(), targetOperation);
 				targetHandler.delete(binlogTransaction.getConnection(), targetOperation);

@@ -74,7 +74,7 @@ public class BinlogHandler {
 	private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	private Exception threadException;
 	private BinlogTransaction binlogTransaction = null;
-	private boolean recovering = true;
+	
 	private boolean threadRunning = false;
 
 	// used for checking group key changed in binlog transaction level
@@ -84,6 +84,8 @@ public class BinlogHandler {
 	private Binlog currntBinlog;
 	@Setter
 	private Binlog targetBinlog;
+	@Setter
+	private boolean recovering = true;
 
 	public BinlogHandler(final UldraConfig uldraConfig) {
 		this.uldraConfig = uldraConfig;

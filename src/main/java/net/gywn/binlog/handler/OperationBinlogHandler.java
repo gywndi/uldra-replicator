@@ -32,7 +32,7 @@ public enum OperationBinlogHandler {
 		public void executeBinlogOperation(final BinlogTransaction binlogTransaction,
 				final BinlogOperation binlogOperation, final TargetHandler targetHandler) throws Exception {
 			for (final TargetTable targetTable : binlogOperation.getBinlogTable().getTargetTables()) {
-				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation);
+				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation, binlogTransaction.isRecovering());
 				targetTable.getInsert().executeUpdate(binlogTransaction, targetOperation, targetHandler);
 			}
 		}
@@ -43,7 +43,7 @@ public enum OperationBinlogHandler {
 		public void executeBinlogOperation(final BinlogTransaction binlogTransaction,
 				final BinlogOperation binlogOperation, final TargetHandler targetHandler) throws Exception {
 			for (final TargetTable targetTable : binlogOperation.getBinlogTable().getTargetTables()) {
-				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation);
+				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation, binlogTransaction.isRecovering());
 				targetTable.getUpdate().executeUpdate(binlogTransaction, targetOperation, targetHandler);
 			}
 		}
@@ -53,7 +53,7 @@ public enum OperationBinlogHandler {
 		public void executeBinlogOperation(final BinlogTransaction binlogTransaction,
 				final BinlogOperation binlogOperation, final TargetHandler targetHandler) throws Exception {
 			for (final TargetTable targetTable : binlogOperation.getBinlogTable().getTargetTables()) {
-				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation);
+				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation, binlogTransaction.isRecovering());
 				targetTable.getDelete().executeUpdate(binlogTransaction, targetOperation, targetHandler);
 			}
 		}
