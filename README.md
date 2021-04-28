@@ -28,7 +28,8 @@ binlogPolicies:
 - name: origin.s_user_status
   groupKey: userid
 
-targetDataSource: !!org.apache.commons.dbcp2.BasicDataSource
+targetDataSource:
+- !!org.apache.commons.dbcp2.BasicDataSource
   driverClassName: com.mysql.jdbc.Driver
   url: jdbc:mysql://127.0.0.1:3306/target?autoReconnect=true&useSSL=false&sessionVariables=SQL_MODE='NO_AUTO_VALUE_ON_ZERO'
   username: target
