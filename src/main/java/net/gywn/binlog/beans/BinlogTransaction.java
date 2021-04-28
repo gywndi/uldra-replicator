@@ -35,8 +35,10 @@ public class BinlogTransaction implements AutoCloseable {
 	private final List<BinlogOperation> binlogOperations = new ArrayList<BinlogOperation>();
 	private final String position;
 	private final Binlog binlog;
-	private boolean transactional = false;
 	private boolean recovering = false;
+	
+	// TODO: set default transactional to true if target is not MySQL
+	private boolean transactional = false;
 
 	@Setter
 	private Connection connection;

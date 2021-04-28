@@ -42,6 +42,10 @@ import net.gywn.binlog.beans.BinlogTable;
 import net.gywn.binlog.common.UldraConfig;
 import net.gywn.binlog.common.UldraUtil;
 
+/**
+ * @author chan
+ *
+ */
 @Data
 public class BinlogServer {
 	private static final Logger logger = LoggerFactory.getLogger(BinlogServer.class);
@@ -96,6 +100,8 @@ public class BinlogServer {
 			binaryLogClient = new BinaryLogClient(binlogServerUrl, binlogServerPort, binlogServerUsername,
 					binlogServerPassword);
 			EventDeserializer eventDeserializer = new EventDeserializer();
+			
+			// DATE_AND_TIME_AS_LONG_MICRO : calculate the time from this number to support microseconds.
 			eventDeserializer.setCompatibilityMode(DATE_AND_TIME_AS_LONG_MICRO, CHAR_AND_BINARY_AS_BYTE_ARRAY);
 			binaryLogClient.setEventDeserializer(eventDeserializer);
 			binaryLogClient.setServerId(binlogServerID);
@@ -137,7 +143,7 @@ public class BinlogServer {
 				public void run() {
 					while (true) {
 						try {
-							int currentJobCount = binlogHandler.getJobCount();
+							int currentJobCount = binlogHandler.getCurrentJobCount();
 							List<Binlog> binlogList = binlogHandler.getWorkerBinlogList();
 
 							Binlog binlog = null, lastBinlog = null;
@@ -154,6 +160,7 @@ public class BinlogServer {
 								lastBinlog = binlogHandler.getTargetBinlog();
 							}
 
+							// When processing more than the binlog position set for recovery, the recover mode is released.
 							if (binlogHandler.isRecovering() && !binlogHandler.isRecoveringPosition()) {
 								logger.info("Recover finished, target - {}", binlogHandler.getTargetBinlog());
 								binlogHandler.setRecovering(false);
@@ -191,6 +198,7 @@ public class BinlogServer {
 		});
 	}
 
+	// TODO:  Need to implement code to recover in case of replication failure
 	private void registerLifecycleListener() {
 		binaryLogClient.registerLifecycleListener(new LifecycleListener() {
 

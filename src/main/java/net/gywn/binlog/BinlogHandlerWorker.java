@@ -61,7 +61,7 @@ public class BinlogHandlerWorker {
 				queue.add(tx);
 				break;
 			} catch (Exception e) {
-//				logger.error("Enqueue error", e.getMessage());
+				// TODO: add metric to check enqueue error
 				UldraUtil.sleep(100);
 			}
 		}
@@ -154,6 +154,7 @@ public class BinlogHandlerWorker {
 		}
 	}
 
+	// Current processing job + jobs in queue
 	public int getJobCount() {
 		return queue.size() + (processing ? 1 : 0);
 	}

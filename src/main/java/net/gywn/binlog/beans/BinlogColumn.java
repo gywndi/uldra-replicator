@@ -31,6 +31,7 @@ public class BinlogColumn {
 	@Setter
 	private boolean rowKey = false;
 
+	// TODO: add default values
 	public BinlogColumn(final String name, final String type, final String charset, final boolean unsigned) {
 		this.name = name;
 		this.charset = charset;

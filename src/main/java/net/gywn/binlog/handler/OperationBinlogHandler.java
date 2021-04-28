@@ -31,8 +31,11 @@ public enum OperationBinlogHandler {
 		@Override
 		public void executeBinlogOperation(final BinlogTransaction binlogTransaction,
 				final BinlogOperation binlogOperation, final TargetHandler targetHandler) throws Exception {
+
+			// Query is divided by the target tables defined on uldra-config.yml
 			for (final TargetTable targetTable : binlogOperation.getBinlogTable().getTargetTables()) {
-				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation, binlogTransaction.isRecovering());
+				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation,
+						binlogTransaction.isRecovering());
 				targetTable.getInsert().executeUpdate(binlogTransaction, targetOperation, targetHandler);
 			}
 		}
@@ -42,8 +45,11 @@ public enum OperationBinlogHandler {
 		@Override
 		public void executeBinlogOperation(final BinlogTransaction binlogTransaction,
 				final BinlogOperation binlogOperation, final TargetHandler targetHandler) throws Exception {
+
+			// Query is divided by the target tables defined on uldra-config.yml
 			for (final TargetTable targetTable : binlogOperation.getBinlogTable().getTargetTables()) {
-				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation, binlogTransaction.isRecovering());
+				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation,
+						binlogTransaction.isRecovering());
 				targetTable.getUpdate().executeUpdate(binlogTransaction, targetOperation, targetHandler);
 			}
 		}
@@ -52,8 +58,11 @@ public enum OperationBinlogHandler {
 		@Override
 		public void executeBinlogOperation(final BinlogTransaction binlogTransaction,
 				final BinlogOperation binlogOperation, final TargetHandler targetHandler) throws Exception {
+
+			// Query is divided by the target tables defined on uldra-config.yml
 			for (final TargetTable targetTable : binlogOperation.getBinlogTable().getTargetTables()) {
-				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation, binlogTransaction.isRecovering());
+				TargetOperation targetOperation = new TargetOperation(targetTable, binlogOperation,
+						binlogTransaction.isRecovering());
 				targetTable.getDelete().executeUpdate(binlogTransaction, targetOperation, targetHandler);
 			}
 		}

@@ -30,11 +30,9 @@ import lombok.Data;
 public class Binlog implements Comparable<Binlog> {
 	private static final Logger logger = LoggerFactory.getLogger(Binlog.class);
 
+	// TODO: GTID support
 	private String binlogFile;
 	private long binlogPosition;
-
-	public Binlog() {
-	}
 
 	public Binlog(final String binlogInfo) {
 		String[] info = binlogInfo.trim().split(":");

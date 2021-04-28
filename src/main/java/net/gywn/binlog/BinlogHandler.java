@@ -526,7 +526,7 @@ public class BinlogHandler {
 		int sleepMS = 1;
 		while (true) {
 
-			if (getJobCount() == 0) {
+			if (getCurrentJobCount() == 0) {
 				break;
 			}
 
@@ -536,7 +536,7 @@ public class BinlogHandler {
 		}
 	}
 
-	public int getJobCount() {
+	public int getCurrentJobCount() {
 		int currentJobs = 0;
 		for (BinlogHandlerWorker worker : binlogHandlerWorkers) {
 			currentJobs += worker.getJobCount();

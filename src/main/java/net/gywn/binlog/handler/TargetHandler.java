@@ -41,7 +41,7 @@ public interface TargetHandler {
 	public void delete(final Connection connection, final TargetOperation operation) throws Exception;
 
 	public void softdel(final Connection connection, final TargetOperation operation) throws Exception;
-	
-	public Map<String, String> selectByOld(final Connection connection, final TargetOperation operation) throws Exception;
 
+	public Map<String, String> selectByOld(final Connection connection, final TargetOperation operation)
+			throws Exception;
 }

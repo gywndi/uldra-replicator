@@ -36,6 +36,8 @@ import net.gywn.binlog.beans.BinlogColumn;
 public class UldraUtil {
 	private static final Logger logger = LoggerFactory.getLogger(UldraUtil.class);
 	private static final CaseInsensitiveMap<String, String> charMap = new CaseInsensitiveMap<String, String>();
+
+	// TODO: Convert to mapping information for the entire character set
 	static {
 		charMap.put("euckr", "MS949");
 		charMap.put("utf8", "UTF-8");
@@ -83,6 +85,7 @@ public class UldraUtil {
 		return null;
 	}
 
+	// Convert to DATETIME(n)
 	private static String getMysqlDatetime(final Serializable serializable) {
 		logger.debug("getMysqlDatetime {}", serializable);
 		long time = (long) serializable;
@@ -91,6 +94,7 @@ public class UldraUtil {
 		return String.format("%s.%06d", format.format(new Date(time / 1000)), time % 1000000);
 	}
 
+	// Convert to TIMESTAMP(n)
 	private static String getMysqlTimestamp(final Serializable serializable) {
 		logger.debug("getMysqlTimestamp {}", serializable);
 		long time = (long) serializable;
@@ -98,6 +102,7 @@ public class UldraUtil {
 		return String.format("%s.%06d", format.format(new Date(time / 1000)), time % 1000000);
 	}
 
+	// Convert to DATE
 	private static String getMysqlDate(final Serializable serializable) {
 		logger.debug("getMysqlDate {}", serializable);
 		long time = (long) serializable;
@@ -106,6 +111,7 @@ public class UldraUtil {
 		return String.format("%s", format.format(new Date(time / 1000)));
 	}
 
+	// Convert to TIME
 	private static String getMysqlTime(final Serializable serializable) {
 		logger.debug("getMysqlTime {}", serializable);
 		long time = (long) serializable;
@@ -114,12 +120,48 @@ public class UldraUtil {
 		return String.format("%s.%06d", format.format(new Date(time / 1000)), time % 1000000);
 	}
 
+	// Convert to String
+	public static String getMysqlString(final Serializable serializable) {
+		logger.debug("java String type");
+		return (String) serializable;
+	}
+
+	// Convert to INT
+	public static String getMysqlInt(final Serializable serializable, final boolean isUnsigned) {
+		logger.debug("java Integer type, unsinged {}", isUnsigned);
+		return isUnsigned ? Integer.toUnsignedString((Integer) serializable) : serializable.toString();
+	}
+
+	// Convert to BIGINT
+	public static String getMysqlBigint(final Serializable serializable, final boolean isUnsigned) {
+		logger.debug("java Long type, unsinged {}", isUnsigned);
+		return isUnsigned ? Long.toUnsignedString((Long) serializable) : serializable.toString();
+	}
+
+	// Convert to CLOB
+	public static String toCharsetString(final byte[] byteArray, final String mysqlCharset) {
+		logger.debug("java Bytes type, charset to {}", mysqlCharset);
+		String javaCharset = charMap.get(mysqlCharset);
+		if (javaCharset != null) {
+			try {
+				return new String(byteArray, javaCharset);
+			} catch (UnsupportedEncodingException e) {
+				logger.error(e.getMessage());
+			}
+		}
+		return new String(byteArray);
+	}
+
 	public static String toString(final Serializable serializable, final BinlogColumn column) {
 		if (serializable == null) {
 			return null;
 		}
 
 		logger.debug("column type in mysql {}", column.getType());
+
+		// ==================================
+		// Datetime & Timestamp & Date & Time
+		// ==================================
 		switch (column.getType()) {
 		case "datetime":
 			return getMysqlDatetime(serializable);
@@ -131,40 +173,32 @@ public class UldraUtil {
 			return getMysqlTime(serializable);
 		}
 
+		// ==================================
+		// String type
+		// ==================================
 		if (serializable instanceof String) {
-			logger.debug("java String type");
-			return (String) serializable;
+			return getMysqlString(serializable);
 		}
 
+		// ==================================
+		// Number type
+		// ==================================
 		if (serializable instanceof java.lang.Integer) {
-			logger.debug("java Integer type");
-			return column.isUnsigned() ? Integer.toUnsignedString((Integer) serializable) : serializable.toString();
+			return getMysqlInt(serializable, column.isUnsigned());
 		}
 
 		if (serializable instanceof java.lang.Long) {
-			logger.debug("java Long type, unsinged {}", column.isUnsigned());
-			return column.isUnsigned() ? Long.toUnsignedString((Long) serializable) : serializable.toString();
+			return getMysqlBigint(serializable, column.isUnsigned());
 		}
 
+		// ==================================
+		// CLOB type
+		// ==================================
 		if (serializable instanceof byte[] && column.getCharset() != null) {
-			logger.debug("java Bytes type");
 			return toCharsetString((byte[]) serializable, column.getCharset());
 		}
 
 		logger.debug("java {} type", serializable.getClass());
 		return serializable.toString();
-	}
-
-	public static String toCharsetString(final byte[] byteArray, final String mysqlCharset) {
-		logger.debug("toCharsetString->{}", mysqlCharset);
-		String javaCharset = charMap.get(mysqlCharset);
-		if (javaCharset != null) {
-			try {
-				return new String(byteArray, javaCharset);
-			} catch (UnsupportedEncodingException e) {
-				logger.error(e.getMessage());
-			}
-		}
-		return new String(byteArray);
 	}
 }
