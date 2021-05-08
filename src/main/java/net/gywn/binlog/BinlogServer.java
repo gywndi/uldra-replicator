@@ -100,7 +100,7 @@ public class BinlogServer {
 			binaryLogClient = new BinaryLogClient(binlogServerUrl, binlogServerPort, binlogServerUsername,
 					binlogServerPassword);
 			EventDeserializer eventDeserializer = new EventDeserializer();
-			
+
 			// DATE_AND_TIME_AS_LONG_MICRO : calculate the time from this number to support microseconds.
 			eventDeserializer.setCompatibilityMode(DATE_AND_TIME_AS_LONG_MICRO, CHAR_AND_BINARY_AS_BYTE_ARRAY);
 			binaryLogClient.setEventDeserializer(eventDeserializer);
@@ -138,47 +138,43 @@ public class BinlogServer {
 			// ========================================
 			// binlog flush (every 500ms) & monitoring
 			// ========================================
-			new Thread(new Runnable() {
+			new Thread(() -> {
+				while (true) {
+					try {
+						int currentJobCount = binlogHandler.getCurrentJobCount();
+						List<Binlog> binlogList = binlogHandler.getWorkerBinlogList();
 
-				public void run() {
-					while (true) {
-						try {
-							int currentJobCount = binlogHandler.getCurrentJobCount();
-							List<Binlog> binlogList = binlogHandler.getWorkerBinlogList();
-
-							Binlog binlog = null, lastBinlog = null;
-							if (binlogList.size() > 0) {
-								Binlog[] binlogArray = new Binlog[binlogList.size()];
-								binlogList.toArray(binlogArray);
-								Arrays.sort(binlogArray);
-								binlog = currentJobCount > 0 ? binlogArray[0] : binlogArray[binlogArray.length - 1];
-								lastBinlog = binlogHandler.getCurrntBinlog();
-							}
-
-							if (binlog == null) {
-								binlog = binlogHandler.getCurrntBinlog();
-								lastBinlog = binlogHandler.getTargetBinlog();
-							}
-
-							// When processing more than the binlog position set for recovery, the recover mode is released.
-							if (binlogHandler.isRecovering() && !binlogHandler.isRecoveringPosition()) {
-								logger.info("Recover finished, target - {}", binlogHandler.getTargetBinlog());
-								binlogHandler.setRecovering(false);
-							}
-
-							// flush binlog position info
-							Binlog.flush(binlog, lastBinlog, binlogInfoFile);
-
-						} catch (Exception e) {
-							logger.debug("Flush failed - ", e);
-
-						} finally {
-							UldraUtil.sleep(500);
+						Binlog binlog = null, lastBinlog = null;
+						if (binlogList.size() > 0) {
+							Binlog[] binlogArray = new Binlog[binlogList.size()];
+							binlogList.toArray(binlogArray);
+							Arrays.sort(binlogArray);
+							binlog = currentJobCount > 0 ? binlogArray[0] : binlogArray[binlogArray.length - 1];
+							lastBinlog = binlogHandler.getCurrntBinlog();
 						}
 
-					}
-				}
+						if (binlog == null) {
+							binlog = binlogHandler.getCurrntBinlog();
+							lastBinlog = binlogHandler.getTargetBinlog();
+						}
 
+						// When processing more than the binlog position set for recovery, the recover mode is released.
+						if (binlogHandler.isRecovering() && !binlogHandler.isRecoveringPosition()) {
+							logger.info("Recover finished, target - {}", binlogHandler.getTargetBinlog());
+							binlogHandler.setRecovering(false);
+						}
+
+						// flush binlog position info
+						Binlog.flush(binlog, lastBinlog, binlogInfoFile);
+
+					} catch (Exception e) {
+						logger.debug("Flush failed - ", e);
+
+					} finally {
+						UldraUtil.sleep(500);
+					}
+
+				}
 			}, "uldra").start();
 			binaryLogClient.connect();
 
@@ -191,11 +187,8 @@ public class BinlogServer {
 	}
 
 	private void registerEventListener() {
-		binaryLogClient.registerEventListener(new EventListener() {
-			public void onEvent(Event event) {
-				BinlogEvent.valuOf(event.getHeader().getEventType()).receiveEvent(event, binlogHandler);
-			}
-		});
+		binaryLogClient.registerEventListener(event ->
+				BinlogEvent.valuOf(event.getHeader().getEventType()).receiveEvent(event, binlogHandler));
 	}
 
 	// TODO:  Need to implement code to recover in case of replication failure
