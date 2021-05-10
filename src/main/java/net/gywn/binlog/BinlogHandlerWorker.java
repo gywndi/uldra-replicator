@@ -68,54 +68,50 @@ public class BinlogHandlerWorker {
 	}
 
 	public void start() {
-		thread = new Thread(new Runnable() {
+		thread = new Thread(() -> {
+			while (true) {
 
-			public void run() {
-				while (true) {
+				try {
+					// ========================
+					// dequeue
+					// ========================
+					BinlogTransaction binlogTransaction = queue.take();
+					logger.debug("dequeue - {}", binlogTransaction);
 
-					try {
-						// ========================
-						// dequeue
-						// ========================
-						BinlogTransaction binlogTransaction = queue.take();
-						logger.debug("dequeue - {}", binlogTransaction);
+					// ========================
+					// transaction processing
+					// ========================
+					processing = true;
+					while (true) {
+						try {
+							// begin
+							transactionStart(binlogTransaction);
 
-						// ========================
-						// transaction processing
-						// ========================
-						processing = true;
-						while (true) {
-							try {
-								// begin
-								transactionStart(binlogTransaction);
+							// processing
+							for (final BinlogOperation binlogOperation : binlogTransaction.getBinlogOperations()) {
+								binlogOperation.modify();
 
-								// processing
-								for (final BinlogOperation binlogOperation : binlogTransaction.getBinlogOperations()) {
-									binlogOperation.modify();
-
-									// apply to target table
-									binlogOperation.getBinlogHandler().executeBinlogOperation(binlogTransaction,
-											binlogOperation, targetHandler);
-								}
-
-								// commit
-								transactionCommit(binlogTransaction);
-								lastExecutedBinlog = new Binlog(binlogTransaction.getPosition());
-								break;
-							} catch (Exception e) {
-								logger.error(e.getMessage());
-								e.printStackTrace();
-								transactionRollback(binlogTransaction);
-								UldraUtil.sleep(1000);
+								// apply to target table
+								binlogOperation.getBinlogHandler().executeBinlogOperation(binlogTransaction,
+										binlogOperation, targetHandler);
 							}
+
+							// commit
+							transactionCommit(binlogTransaction);
+							lastExecutedBinlog = new Binlog(binlogTransaction.getPosition());
+							break;
+						} catch (Exception e) {
+							logger.error(e.getMessage());
+							e.printStackTrace();
+							transactionRollback(binlogTransaction);
+							UldraUtil.sleep(1000);
 						}
-						processing = false;
-					} catch (InterruptedException e) {
-						System.out.println("[dequeue]" + e);
 					}
+					processing = false;
+				} catch (InterruptedException e) {
+					System.out.println("[dequeue]" + e);
 				}
 			}
-
 		}, workerName);
 		thread.start();
 		logger.info("{} started", workerName);
