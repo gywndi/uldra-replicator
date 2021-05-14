@@ -74,7 +74,7 @@ public class BinlogHandler {
 	private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	private Exception threadException;
 	private BinlogTransaction binlogTransaction = null;
-	
+
 	private boolean threadRunning = false;
 
 	// used for checking group key changed in binlog transaction level
@@ -266,15 +266,15 @@ public class BinlogHandler {
 
 	public void receiveTableMapEvent(final Event event) {
 		TableMapEventData eventData = (TableMapEventData) event.getData();
-
-		if (binlogTableMap.containsKey(eventData.getTableId())) {
+		BinlogTable binlogTable = binlogTableMap.get(eventData.getTableId());
+		if (binlogTable != null && binlogTable.equalsTable(eventData)) {
 			return;
 		}
 
 		logger.info("Meta info for TABLE_ID_{} is not in cache (`{}`.`{}`)", eventData.getTableId(),
 				eventData.getDatabase(), eventData.getTable());
-		binlogTableMap.put(eventData.getTableId(), getBinlogTable(eventData));
-		BinlogTable binlogTable = binlogTableMap.get(eventData.getTableId());
+		binlogTable = getBinlogTable(eventData);
+		binlogTableMap.put(eventData.getTableId(), binlogTable);
 
 		if (!binlogTable.isTarget()) {
 			logger.info("Skip `{}`.`{}`, not target", eventData.getDatabase(), eventData.getTable());
@@ -438,7 +438,7 @@ public class BinlogHandler {
 		// Binlog policy
 		String database = tableMapEventData.getDatabase().toLowerCase();
 		String table = tableMapEventData.getTable().toLowerCase();
-		String name = String.format("%s.%s", database, table);
+		String name = BinlogTable.getTableName(database, table);
 		BinlogPolicy binlogPolicy = uldraConfig.getBinlogPolicyMap().get(name);
 
 		Connection connection = null;
@@ -545,8 +545,8 @@ public class BinlogHandler {
 		logger.debug("Current remain jobs {}", currentJobs);
 		return currentJobs;
 	}
-	
-	public List<Binlog> getWorkerBinlogList(){
+
+	public List<Binlog> getWorkerBinlogList() {
 		List<Binlog> binlogList = new ArrayList<Binlog>();
 		for (BinlogHandlerWorker binlogHandlerWorker : binlogHandlerWorkers) {
 			Binlog binlog = binlogHandlerWorker.getLastExecutedBinlog();
