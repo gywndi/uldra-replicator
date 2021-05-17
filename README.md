@@ -7,7 +7,7 @@
 ## build & run
 
     mvn install
-    java -jar target/uldra-replicator-0.0.1.jar --config-file="uldra-config.yml"
+    java -jar target/uldra-replicator-0.0.2.jar --config-file="uldra-config.yml"
 
 ## uldra-config.yml
 ```yaml

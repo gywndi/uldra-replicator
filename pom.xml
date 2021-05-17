@@ -4,9 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.gywn</groupId>
 	<artifactId>uldra-replicator</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<properties>
-		<version>0.0.1</version>
 		<java.version>1.8</java.version>
 		<maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
 		<binlog-connector.version>0.21.0</binlog-connector.version>
