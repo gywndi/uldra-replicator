@@ -96,7 +96,7 @@ public class BinlogTable {
 
 	public boolean equalsTable(final TableMapEventData tableMapEventData) {
 		String eventTableName = getTableName(tableMapEventData.getDatabase(), tableMapEventData.getTable());
-		if (eventTableName.equalsIgnoreCase(this.name)) {
+		if (!eventTableName.equalsIgnoreCase(this.name)) {
 			logger.info("`{}` is not same with `{}` in table map event", this.name, eventTableName);
 			return false;
 		}
