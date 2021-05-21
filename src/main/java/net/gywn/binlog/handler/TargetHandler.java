@@ -17,6 +17,7 @@
 package net.gywn.binlog.handler;
 
 import java.sql.Connection;
+import java.util.List;
 import java.util.Map;
 
 import net.gywn.binlog.beans.TargetOperation;

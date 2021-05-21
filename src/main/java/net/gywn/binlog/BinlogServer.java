@@ -198,6 +198,10 @@ public class BinlogServer {
 			public void onConnect(BinaryLogClient client) {
 				logger.info("mysql-binlog-connector start from {}:{}", client.getBinlogFilename(),
 						client.getBinlogPosition());
+				
+				// table id initialized when reconnecting, remove all
+				binlogTableMap.clear();
+				
 				threadRunning = true;
 			}
 
