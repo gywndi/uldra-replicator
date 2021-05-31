@@ -14,6 +14,8 @@ binlogPolicies:
   - name: "t_user"
 - name: origin.s_user_status
   groupKey: userid
+  replicatPolicies:
+  - name: "t_user_status"
     
 dataSources:
 - !!org.apache.commons.dbcp2.BasicDataSource

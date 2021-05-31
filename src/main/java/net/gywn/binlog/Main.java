@@ -16,13 +16,30 @@
 
 package net.gywn.binlog;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.gywn.binlog.beans.Binlog;
+import net.gywn.binlog.beans.BinlogColumn;
+import net.gywn.binlog.beans.BinlogOperation;
+import net.gywn.binlog.beans.BinlogTable;
+import net.gywn.binlog.beans.BinlogTransaction;
+import net.gywn.binlog.common.BinlogPolicy;
 import net.gywn.binlog.common.UldraConfig;
+import net.gywn.binlog.common.UldraUtil;
+import net.gywn.binlog.handler.OperationBinlogHandler;
+import net.gywn.loader.BulkLoader;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -80,9 +97,27 @@ public class Main implements Callable<Integer> {
 				uldraConfig.modifyBinlogFile(binlogInfo);
 			}
 			uldraConfig.init();
-
 			logger.info(uldraConfig.toString());
+
+			// ==========================================
+			// Load binlog server
+			// ==========================================
 			BinlogServer binlogServer = new BinlogServer(uldraConfig);
+
+			// ==========================================
+			// Start bulk initial load, if no binlog file
+			// ==========================================
+			File binlogFile = new File(uldraConfig.getBinlogInfoFile());
+			if (!binlogFile.exists()) {
+				logger.info("Binlog file({}) not exists, start migration from binlog server",
+						uldraConfig.getBinlogInfoFile());
+				BulkLoader bulkLoader = new BulkLoader(binlogServer);
+				bulkLoader.start();
+			}
+
+			// ==========================================
+			// Binlog server start
+			// ==========================================
 			binlogServer.start();
 
 		} catch (Exception e) {

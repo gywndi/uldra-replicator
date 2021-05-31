@@ -16,6 +16,10 @@
 
 package net.gywn.binlog.beans;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +33,8 @@ import lombok.ToString;
 import net.gywn.binlog.handler.RowHandler;
 import net.gywn.binlog.common.BinlogPolicy;
 import net.gywn.binlog.common.ReplicatPolicy;
+import net.gywn.binlog.common.UldraConfig;
+import net.gywn.binlog.common.UldraUtil;
 
 @Getter
 @ToString
@@ -105,5 +111,89 @@ public class BinlogTable {
 
 	public static String getTableName(final String database, final String table) {
 		return String.format("%s.%s", database, table);
+	}
+
+	public static BinlogTable getBinlogTable(final UldraConfig uldraConfig, final String database, final String table) {
+		String name = BinlogTable.getTableName(database, table);
+		BinlogPolicy binlogPolicy = uldraConfig.getBinlogPolicyMap().get(name);
+
+		Connection connection = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		String query = null;
+		while (true) {
+			try {
+
+				// Get connection
+				connection = uldraConfig.getBinlogDataSource().getConnection();
+
+				// Get columns
+				List<BinlogColumn> columns = new ArrayList<BinlogColumn>();
+				query = " select ordinal_position,";
+				query += "  lower(column_name) column_name,";
+				query += "  lower(character_set_name) character_set_name,";
+				query += "  lower(data_type) data_type,";
+				query += "  instr(column_type, 'unsigned') is_unsigned";
+				query += " from information_schema.columns";
+				query += " where table_schema = ?";
+				query += " and table_name = ?";
+				query += " order by ordinal_position";
+
+				pstmt = connection.prepareStatement(query);
+				pstmt.setString(1, database);
+				pstmt.setString(2, table);
+				rs = pstmt.executeQuery();
+				while (rs.next()) {
+					String columnName = rs.getString("column_name").toLowerCase();
+					String columnCharset = rs.getString("character_set_name");
+					String dataType = rs.getString("data_type");
+					boolean columnUnsigned = rs.getBoolean("is_unsigned");
+					columns.add(new BinlogColumn(columnName, dataType, columnCharset, columnUnsigned));
+				}
+				rs.close();
+				pstmt.close();
+
+				// Get primary key & unique key
+				List<BinlogColumn> rowKeys = new ArrayList<BinlogColumn>();
+				query = " select distinct ";
+				query += "   column_name ";
+				query += " from information_schema.table_constraints a ";
+				query += " inner join information_schema.statistics b on b.table_schema = a.table_schema ";
+				query += "   and a.table_name = b.table_name ";
+				query += "   and b.index_name = a.constraint_name ";
+				query += " where lower(a.constraint_type) in ('primary key') ";
+				query += " and a.table_schema = ? ";
+				query += " and a.table_name = ? ";
+
+				pstmt = connection.prepareStatement(query);
+				pstmt.setString(1, database);
+				pstmt.setString(2, table);
+				rs = pstmt.executeQuery();
+				while (rs.next()) {
+					String columnName = rs.getString("column_name").toLowerCase();
+					for (BinlogColumn column : columns) {
+						if (column.getName().equals(columnName)) {
+							column.setRowKey(true);
+							rowKeys.add(column);
+							break;
+						}
+					}
+				}
+				rs.close();
+				pstmt.close();
+
+				return new BinlogTable(name, columns, rowKeys, binlogPolicy);
+
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+				UldraUtil.sleep(1000);
+			} finally {
+				try {
+					connection.close();
+				} catch (SQLException e) {
+					logger.error(e.getMessage());
+				}
+			}
+		}
 	}
 }
